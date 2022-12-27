@@ -12,6 +12,7 @@ use std::time::{Duration, Instant};
 use std::{io, thread};
 // 由於使用crossterm將mac terminal變更為raw mode無法成功
 // 因此改為使用termion
+use invaders::invaders::Invaders;
 use termion::raw::IntoRawMode;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -48,6 +49,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut player = Player::new();
     let mut instant = Instant::now();
+    let mut invaders = Invaders::new();
     // 專門處理遊戲邏輯的loop，會生成畫面並透過channel傳給負責更新畫面的子執行緒
     'gameloop: loop {
         let delta = instant.elapsed();
@@ -74,7 +76,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         // 根據過去的時間，對畫面進行更新
         player.update(delta);
-        player.draw(&mut curr_frame);
+        // 如果計時器到了，畫面要更新的話，音樂播放一次
+        if invaders.update(delta) {
+            audio.play("move");
+        }
+        // player.draw(&mut curr_frame);
+        // invaders.draw(&mut curr_frame);
+        let drawables: Vec<&dyn Drawable> = vec![&player, &invaders];
+        for drawable in drawables {
+            drawable.draw(&mut curr_frame);
+        }
         let _ = render_tx.send(curr_frame);
         thread::sleep(Duration::from_millis(1));
     }
