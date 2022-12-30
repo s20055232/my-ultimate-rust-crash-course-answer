@@ -1,4 +1,5 @@
 use crate::frame::{Drawable, Frame};
+use crate::invaders::Invaders;
 use crate::shot::Shot;
 use crate::{NUM_COLS, NUM_ROWS};
 use std::time::Duration;
@@ -44,8 +45,24 @@ impl Player {
         // 進行篩選，若shot還沒死掉，則繼續保留，若死掉，則將子彈丟棄
         self.shots.retain(|shot| !shot.dead());
     }
+    pub fn detect_hits(&mut self, invader: &mut Invaders) -> bool {
+        let mut hit_something = false;
+        for shot in self.shots.iter_mut() {
+            // 子彈不能同時擊中兩次，如果已經爆炸過，則跳過
+            if !shot.explode && invader.kill_invader_at(shot.x, shot.y) {
+                hit_something = true;
+                shot.explode();
+            }
+        }
+        hit_something
+    }
 }
 
+impl Default for Player {
+    fn default() -> Self {
+        Player::new()
+    }
+}
 impl Drawable for Player {
     fn draw(&self, frame: &mut Frame) {
         frame[self.x][self.y] = "A";

@@ -80,6 +80,27 @@ impl Invaders {
         }
         false
     }
+    pub fn all_killed(&self) -> bool {
+        // 確認是否所有敵人都死亡
+        self.army.is_empty()
+    }
+    pub fn reach_bottom(&self) -> bool {
+        // 敵人是否到最底部了
+        self.army.iter().map(|invader| invader.y).max().unwrap_or(0) >= NUM_ROWS - 1
+    }
+    pub fn kill_invader_at(&mut self, x: usize, y: usize) -> bool {
+        // 子彈的pos是否跟invader的pos一致，如果是，則成功擊殺
+        if let Some(idx) = self
+            .army
+            .iter()
+            .position(|invader| invader.x == x && invader.y == y)
+        {
+            self.army.remove(idx);
+            true
+        } else {
+            false
+        }
+    }
 }
 
 impl Default for Invaders {

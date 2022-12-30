@@ -10,8 +10,8 @@ use std::error::Error;
 use std::sync::mpsc;
 use std::time::{Duration, Instant};
 use std::{io, thread};
-// 由於使用crossterm將mac terminal變更為raw mode無法成功
-// 因此改為使用termion
+// 由於使用 crossterm 將mac terminal變更為raw mode無法成功
+// 因此改為使用 termion
 use invaders::invaders::Invaders;
 use termion::raw::IntoRawMode;
 
@@ -80,6 +80,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         if invaders.update(delta) {
             audio.play("move");
         }
+        if player.detect_hits(&mut invaders) {
+            audio.play("explode");
+        }
         // player.draw(&mut curr_frame);
         // invaders.draw(&mut curr_frame);
         let drawables: Vec<&dyn Drawable> = vec![&player, &invaders];
@@ -88,6 +91,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
         let _ = render_tx.send(curr_frame);
         thread::sleep(Duration::from_millis(1));
+        // 勝利以及失敗條件
+        if invaders.all_killed() {
+            audio.play("win");
+            break 'gameloop;
+        }
+        if invaders.reach_bottom() {
+            audio.play("lose");
+            break 'gameloop;
+        }
     }
     // 將傳送者從作用域移除，確保rust可以正常關閉，舊版本的rust會有此問題
     // 新版本的rust此指令可以不必輸入
